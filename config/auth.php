@@ -112,4 +112,7 @@ return [
 
     'password_timeout' => 10800,
 
+    'email_verification' => true,
+
+
 ];
