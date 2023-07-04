@@ -34,13 +34,14 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
         Route::resource("/posts", PostsController::class);
     });
     Route::post("/logout", [AuthController::class, "logout"]);
-    Route::post('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 });
 
+//Users Routes
 Route::resource("/users", UsersController::class);
 
-Route::get('email/verify/{id}', [VerificationController::class, "verify"])->name('verification.verify'); // Make sure to keep this as your route name
 
+Route::get('email/verify/{id}', [VerificationController::class, "verify"])->name('verification.verify'); // Make sure to keep this as your route name
+Route::post('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 
 Route::post('forgot-password', [NewPasswordController::class, 'forgotPassword']);
 Route::post('reset-password', [NewPasswordController::class, 'reset']);

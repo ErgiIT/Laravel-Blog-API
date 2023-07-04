@@ -22,7 +22,12 @@ class VerificationController extends Controller
 
     public function resend(Request $request)
     {
-        $user = $request->user();
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where("email", $request->email)->first();
+
 
         if ($user->hasVerifiedEmail()) {
             return response()->json(["msg" => "Email already verified."], 400);
