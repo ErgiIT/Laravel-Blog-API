@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VerificationController;
@@ -39,3 +40,7 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 Route::resource("/users", UsersController::class);
 
 Route::get('email/verify/{id}', [VerificationController::class, "verify"])->name('verification.verify'); // Make sure to keep this as your route name
+
+
+Route::post('forgot-password', [NewPasswordController::class, 'forgotPassword']);
+Route::post('reset-password', [NewPasswordController::class, 'reset']);
