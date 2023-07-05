@@ -9,9 +9,12 @@ use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Traits\HttpResponses; // Add this line
 
 class NewPasswordController extends Controller
 {
+    use HttpResponses; // Add this line
+
     public function forgotPassword(Request $request)
     {
         $request->validate([
@@ -23,18 +26,14 @@ class NewPasswordController extends Controller
         );
 
         if ($status == Password::RESET_LINK_SENT) {
-            return [
+            return $this->success([
                 'status' => __($status)
-            ];
+            ]);
         }
 
-        return response([
+        return $this->error([
             'message' => __($status)
-        ], 500);
-
-        // throw ValidationException::withMessages([
-        //     'email' => [trans($status)],
-        // ]);
+        ], "Error occurred", 500);
     }
 
     public function reset(ResetPasswordRequest $request)
@@ -56,13 +55,13 @@ class NewPasswordController extends Controller
         );
 
         if ($status == Password::PASSWORD_RESET) {
-            return response([
+            return $this->success([
                 'message' => 'Password reset successfully'
             ]);
         }
 
-        return response([
+        return $this->error([
             'message' => __($status)
-        ], 500);
+        ], "Error occurred", 500);
     }
 }

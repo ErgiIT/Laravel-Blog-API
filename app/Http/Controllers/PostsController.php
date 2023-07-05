@@ -12,13 +12,14 @@ use Illuminate\Support\Facades\Auth;
 class PostsController extends Controller
 {
     use HttpResponses;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         return PostsResource::collection(
-            Post::where("user_id", Auth::user()->id)->get()
+            Post::where("public", 1)->get()
         );
     }
 
@@ -27,16 +28,16 @@ class PostsController extends Controller
      */
     public function store(StorePostRequest $request)
     {
-        $request->validated($request->all());
+        $validatedData = $request->validated();
 
         $post = Post::create([
             "user_id" => Auth::user()->id,
-            "title" => $request->title,
-            "desc" => $request->desc,
-            "public" => $request->public
+            "title" => $validatedData['title'],
+            "desc" => $validatedData['desc'],
+            "public" => $validatedData['public']
         ]);
 
-        return new PostsResource($post);
+        return $this->success(new PostsResource($post), 'Post created successfully', 201);
     }
 
     /**
@@ -44,7 +45,11 @@ class PostsController extends Controller
      */
     public function show(Post $post)
     {
-        return $this->isNotAuthorized($post) ? $this->isNotAuthorized($post) : new PostsResource($post);
+        if ($this->isNotAuthorized($post)) {
+            return $this->error(null, 'You are not authorized to make this request', 403);
+        }
+
+        return new PostsResource($post);
     }
 
     /**
@@ -52,8 +57,8 @@ class PostsController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        if (Auth::user()->id !== $post->user_id) {
-            return $this->error("", "You are not authorized to make this request", 403);
+        if ($this->isNotAuthorized($post)) {
+            return $this->error(null, 'You are not authorized to make this request', 403);
         }
 
         $post->update($request->all());
@@ -66,13 +71,17 @@ class PostsController extends Controller
      */
     public function destroy(Post $post)
     {
-        return $this->isNotAuthorized($post) ? $this->isNotAuthorized($post) : $post->delete();
+        if ($this->isNotAuthorized($post)) {
+            return $this->error(null, 'You are not authorized to make this request', 403);
+        }
+
+        $post->delete();
+
+        return $this->success(null, 'Post deleted successfully');
     }
 
     private function isNotAuthorized($post)
     {
-        if (Auth::user()->id !== $post->user_id) {
-            return $this->error("", "You are not authorized to make this request", 403);
-        }
+        return Auth::user()->id !== $post->user_id;
     }
 }

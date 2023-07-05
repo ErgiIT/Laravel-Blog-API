@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\UsersController;
@@ -32,6 +33,10 @@ Route::post("/register", [AuthController::class, "register"]);
 Route::group(["middleware" => ["auth:sanctum"]], function () {
     Route::group(["middleware" => ["verified"]], function () {
         Route::resource("/posts", PostsController::class);
+        Route::post("posts/{id}/comments", [CommentController::class, "store"]);
+        Route::get("comments/{id}", [CommentController::class, "show"]);
+        Route::put("comments/{id}", [CommentController::class, "update"]);
+        Route::delete("comments/{id}", [CommentController::class, "destroy"]);
     });
     Route::post("/logout", [AuthController::class, "logout"]);
 });
@@ -39,9 +44,10 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 //Users Routes
 Route::resource("/users", UsersController::class);
 
-
+//Verification Routes
 Route::get('email/verify/{id}', [VerificationController::class, "verify"])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 
+//Forgot Password
 Route::post('forgot-password', [NewPasswordController::class, 'forgotPassword']);
 Route::post('reset-password', [NewPasswordController::class, 'reset']);

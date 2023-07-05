@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UsersResource;
 use App\Models\User;
+use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
+    use HttpResponses;
+
     /**
      * Display a listing of the resource.
      */
@@ -41,7 +44,7 @@ class UsersController extends Controller
     {
         $user->update($request->all());
 
-        return new UsersResource($user);
+        return $this->success(new UsersResource($user), 'User updated successfully');
     }
 
     /**
@@ -49,6 +52,8 @@ class UsersController extends Controller
      */
     public function destroy(User $user)
     {
-        return $user->delete();
+        $user->delete();
+
+        return $this->success(null, 'User deleted successfully');
     }
 }

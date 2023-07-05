@@ -16,7 +16,7 @@ class PostsResource extends JsonResource
     {
         return [
             "id" => (string)$this->id,
-            "attributs" => [
+            "attributes" => [
                 "title" => $this->title,
                 "desc" => $this->desc,
                 "public" => $this->public,
@@ -26,7 +26,8 @@ class PostsResource extends JsonResource
             "relationships" => [
                 "id" => (string)$this->user->id,
                 "user name" => $this->user->name,
-                "user email" => $this->user->email
+                "user email" => $this->user->email,
+                "post comments" => $this->comments
             ]
         ];
     }

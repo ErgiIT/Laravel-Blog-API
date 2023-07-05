@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Traits\HttpResponses; // Add this line
 
 class VerificationController extends Controller
 {
+    use HttpResponses; // Add this line
+
     public function verify($user_id, Request $request)
     {
         if (!$request->hasValidSignature()) {
-            return response()->json(["msg" => "Invalid/Expired url provided."], 401);
+            return $this->error(["msg" => "Invalid/Expired URL provided."], "Unauthorized", 401);
         }
 
         $user = User::findOrFail($user_id);
@@ -18,6 +21,8 @@ class VerificationController extends Controller
         if (!$user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
+
+        return $this->success(["msg" => "Email verified successfully"]);
     }
 
     public function resend(Request $request)
@@ -28,13 +33,12 @@ class VerificationController extends Controller
 
         $user = User::where("email", $request->email)->first();
 
-
         if ($user->hasVerifiedEmail()) {
-            return response()->json(["msg" => "Email already verified."], 400);
+            return $this->error(["msg" => "Email already verified."], "Bad Request", 400);
         }
 
         $user->sendEmailVerificationNotification();
 
-        return response()->json(["msg" => "Email verification link sent to your email address"]);
+        return $this->success(["msg" => "Email verification link sent to your email address"]);
     }
 }
