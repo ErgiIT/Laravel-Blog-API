@@ -52,4 +52,24 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $this->notify(new ResetPasswordNotification($url));
     }
+
+    public function post()
+    {
+        return $this->hasMany(Post::class)->select("title", "desc", "public");
+    }
+
+    public function comment()
+    {
+        return $this->hasMany(Comment::class)->select("post_id", "comment");
+    }
+
+    public function rating()
+    {
+        return $this->hasMany(Rating::class)->select("rating");
+    }
+
+    public function share()
+    {
+        return $this->hasMany(Share::class)->select("post_id");
+    }
 }

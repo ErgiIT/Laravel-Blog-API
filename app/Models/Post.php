@@ -21,12 +21,18 @@ class Post extends Model
     public function comments()
 
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Comment::class)->select("user_id", "comment");
     }
 
     public function ratings()
 
     {
-        return $this->hasMany(Rating::class);
+        return $this->hasMany(Rating::class)->select("user_id", "rating");
+    }
+
+    public function shares()
+
+    {
+        return $this->hasMany(Share::class);
     }
 }

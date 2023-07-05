@@ -21,14 +21,15 @@ class PostsResource extends JsonResource
                 "desc" => $this->desc,
                 "public" => $this->public,
                 "created_at" => $this->created_at,
-                "updated_at" => $this->updated_at
+                "updated_at" => $this->updated_at,
+                "post comments" => $this->comments,
+                "post ratings" => $this->ratings,
+                "post shares" => $this->shares
             ],
             "relationships" => [
                 "id" => (string)$this->user->id,
                 "user name" => $this->user->name,
                 "user email" => $this->user->email,
-                "post comments" => $this->comments,
-                "post ratings" => $this->ratings
             ]
         ];
     }
