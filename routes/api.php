@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PostsController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
@@ -37,6 +38,9 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
         Route::get("comments/{id}", [CommentController::class, "show"]);
         Route::put("comments/{id}", [CommentController::class, "update"]);
         Route::delete("comments/{id}", [CommentController::class, "destroy"]);
+        Route::get("ratings/{id}", [RatingController::class, "show"]);
+        Route::post("posts/{id}/ratings", [RatingController::class, "upsert"]);
+        Route::delete("ratings/{id}", [RatingController::class, "destroy"]);
     });
     Route::post("/logout", [AuthController::class, "logout"]);
 });

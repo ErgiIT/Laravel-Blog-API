@@ -27,7 +27,8 @@ class PostsResource extends JsonResource
                 "id" => (string)$this->user->id,
                 "user name" => $this->user->name,
                 "user email" => $this->user->email,
-                "post comments" => $this->comments
+                "post comments" => $this->comments,
+                "post ratings" => $this->ratings
             ]
         ];
     }

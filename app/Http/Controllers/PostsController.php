@@ -19,7 +19,8 @@ class PostsController extends Controller
     public function index()
     {
         return PostsResource::collection(
-            Post::where("public", 1)->get()
+            // Post::where("public", 1)->get()
+            Post::get()
         );
     }
 
@@ -49,7 +50,14 @@ class PostsController extends Controller
             return $this->error(null, 'You are not authorized to make this request', 403);
         }
 
-        return new PostsResource($post);
+        $averageRating = $post->ratings->avg('rating');
+
+        return response()->json([
+            'data' => $post,
+            'rating' => [
+                'average_rating' => $averageRating
+            ]
+        ]);
     }
 
     /**
