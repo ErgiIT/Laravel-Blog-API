@@ -46,7 +46,7 @@ return [
     |
     */
 
-    'expiration' => 43800,      //personal tokens expire after 3 days
+    'expiration' => 43800,      //personal tokens expired
 
     /*
     |--------------------------------------------------------------------------
