@@ -68,8 +68,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Rating::class)->select("rating");
     }
 
-    public function share()
+    public function shares()
     {
-        return $this->hasMany(Share::class)->select("post_id");
+        return $this->hasMany(Share::class);
     }
 }

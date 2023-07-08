@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger("user_id");
             $table->unsignedBigInteger("post_id");
-            $table->string("rating");
+            $table->integer("rating");
             $table->foreign("user_id")
                 ->references("id")
                 ->on("users")

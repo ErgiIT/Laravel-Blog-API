@@ -30,9 +30,20 @@ class Post extends Model
         return $this->hasMany(Rating::class)->select("user_id", "rating");
     }
 
+    public function averageRating()
+    {
+        return $this->ratings->average('rating');
+    }
+
+    public function authors()
+    {
+        return $this->belongsToMany(User::class, 'shares');
+    }
+
+
     public function shares()
 
     {
-        return $this->hasMany(Share::class);
+        return $this->hasMany(Share::class)->select("user_id");
     }
 }
