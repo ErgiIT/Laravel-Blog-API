@@ -102,4 +102,80 @@ class ShareController extends Controller
             return $this->error(null, 'No shares were made.', 400);
         }
     }
+
+    public function update(Request $request, $shareId)
+    {
+        $user = Auth::user();
+        $share = Share::find($shareId);
+
+        if (!$share) {
+            return $this->error(null, 'Share not found.', 404);
+        }
+
+        $post = $share->post;
+
+        // Check if the authenticated user is the owner of the post
+        if ($user->id !== $post->user_id) {
+            return $this->error(null, 'You are not allowed to update this share.', 403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|numeric',
+        ]);
+
+        // Retrieve the user ID to update the share with
+        $shareWithUserId = $request->input('user_id');
+
+        // Check if the user with the given ID exists
+        $userExists = User::where('id', $shareWithUserId)->exists();
+
+        if (!$userExists) {
+            return $this->error(null, 'User with ID ' . $shareWithUserId . ' does not exist.', 400);
+        }
+
+        if ($shareWithUserId === $user->id) {
+            return $this->error(null, 'You cannot share the post with yourself.', 400);
+        }
+
+        // Check if the post is public
+        if (!$post->public) {
+            return $this->error(null, 'This post cannot be shared as it is not public.', 400);
+        }
+
+        // Check if the share record already exists for the given user and post combination
+        $existingShare = Share::where('user_id', $shareWithUserId)
+            ->where('post_id', $post->id)
+            ->exists();
+
+        if ($existingShare) {
+            return $this->error(null, 'This post has already been shared with user ID: ' . $shareWithUserId, 400);
+        }
+
+        // Update the share record
+        $share->update(['user_id' => $shareWithUserId]);
+
+        return $this->success($share, 'Share updated successfully.');
+    }
+
+    public function destroy($shareId)
+    {
+        $user = Auth::user();
+        $share = Share::find($shareId);
+
+        if (!$share) {
+            return $this->error(null, 'Share not found.', 404);
+        }
+
+        $post = $share->post;
+
+        // Check if the authenticated user is the owner of the post
+        if ($user->id !== $post->user_id) {
+            return $this->error(null, 'You are not allowed to delete this share.', 403);
+        }
+
+        // Delete the share record
+        $share->delete();
+
+        return $this->success(null, 'Share deleted successfully.');
+    }
 }

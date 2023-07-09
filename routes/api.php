@@ -49,6 +49,8 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
         Route::post("posts/{id}/ratings", [RatingController::class, "upsert"]);
         Route::delete("ratings/{id}", [RatingController::class, "destroy"]);
         Route::post("posts/{id}/shares", [ShareController::class, "store"]);
+        Route::patch('posts/shares/{id}', [ShareController::class, 'update']);
+        Route::delete('posts/shares/{id}', [ShareController::class, 'destroy']);
     });
     Route::post("/logout", [AuthController::class, "logout"]);
 });
