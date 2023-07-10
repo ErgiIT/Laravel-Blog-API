@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PostShared;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Share;
 use App\Traits\HttpResponses; // Import the HttpResponses trait
+use Illuminate\Support\Facades\Mail;
 
 class ShareController extends Controller
 {
@@ -65,10 +67,16 @@ class ShareController extends Controller
                 continue; // Skip to the next iteration of the loop
             }
 
-            Share::create([
+            $share = Share::create([
                 'user_id' => $shareWithUserId,
                 'post_id' => $post->id,
             ]);
+
+            // Get the user's email address
+            $userEmail = User::where('id', $shareWithUserId)->value('email');
+
+            // Send the email
+            Mail::to($userEmail)->send(new PostShared($share));
 
             $successfulShares[] = $shareWithUserId;
         }
@@ -93,13 +101,13 @@ class ShareController extends Controller
                 $message .= $successMessage;
             }
 
-            if (!empty($errorMessages)) {
+            if (!empty($errorMessages) || !empty($alreadySharedWithUsers) && !empty($successfulShares)) {
                 return $this->error(null, $message, 400);
             } else {
                 return $this->success(null, $message);
             }
         } else {
-            return $this->error(null, 'No shares were made.', 400);
+            return $this->error(null, 'No shares were made.', 409);
         }
     }
 
