@@ -83,23 +83,35 @@ class PostsController extends Controller
         if ($post) {
             $categoryNames = $post->categories->pluck('name');
 
-            $similarPosts =
-                Post::where(function ($query) use ($categoryNames) {
-                    $query->where('public', true) // Public posts
-                        ->orWhereHas('shares', function ($query) {
-                            $query->where('user_id', Auth::user()->id);
-                        });
-                })->whereHas('categories', function ($query) use ($categoryNames) {
+            $similarPosts = Post::where(function ($query) use ($categoryNames) {
+                $query->where('public', true) // Public posts
+                    ->orWhereHas('shares', function ($query) {
+                        $query->where('user_id', Auth::user()->id);
+                    });
+            })
+                ->whereHas('categories', function ($query) use ($categoryNames) {
                     $query->whereIn('name', $categoryNames);
                 })
                 ->where('id', '!=', $post->id)
                 ->get();
 
+
+
+            $rankedPosts = $similarPosts->map(function ($similarPost) use ($categoryNames) {
+                $similarPostCategories = $similarPost->categories->pluck('name');
+                $commonCategories = $categoryNames->intersect($similarPostCategories);
+                $count = $commonCategories->count();
+
+                return [
+                    'post' => new PostsResource($similarPost),
+                    'category_count' => $count,
+                ];
+            })->sortByDesc('category_count')->values();
+
             $data = [
                 'post' => new PostsResource($post),
-                'similar_posts' => PostsResource::collection($similarPosts),
+                'similar_posts' => $rankedPosts,
             ];
-
 
             return $this->success($data, 'Post retrieved successfully');
         }
