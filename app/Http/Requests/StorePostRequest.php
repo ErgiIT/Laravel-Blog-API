@@ -24,7 +24,9 @@ class StorePostRequest extends FormRequest
         return [
             "title" => ["required", "max:255"],
             "desc" => ["required", "max:255"],
-            "public" => ["required", "boolean"]
+            "public" => ["required", "boolean"],
+            'categories' => 'required|array',
+            'categories.*' => 'required|numeric',
         ];
     }
 }

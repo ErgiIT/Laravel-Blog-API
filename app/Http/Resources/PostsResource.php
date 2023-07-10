@@ -27,7 +27,8 @@ class PostsResource extends JsonResource
                 "average_rating" => $this->averageRating(),
                 "post shares" => $this->shares,
                 "post authors" => $this->authors->count(),
-                "post last edited by" => $this->last_edited_by
+                "post last edited by" => $this->last_edited_by,
+                "post category" => $this->categories
             ],
             "relationships" => [
                 "id" => (string)$this->user->id,

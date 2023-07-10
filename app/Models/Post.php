@@ -46,4 +46,9 @@ class Post extends Model
     {
         return $this->hasMany(Share::class)->select("user_id");
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class)->select("name");
+    }
 }

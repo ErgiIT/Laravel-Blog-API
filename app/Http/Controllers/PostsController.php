@@ -6,7 +6,6 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\PostsResource;
 use App\Models\Post;
 use App\Models\Share;
-use App\Models\User;
 use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +50,9 @@ class PostsController extends Controller
             "desc" => $validatedData['desc'],
             "public" => $validatedData['public']
         ]);
+
+        $categories = $validatedData['categories'];
+        $post->categories()->attach($categories);
         $post->last_edited_by = Auth::user()->id;
         $post->save();
 
@@ -79,11 +81,32 @@ class PostsController extends Controller
             ->first();
 
         if ($post) {
-            return new PostsResource($post);
+            $categoryNames = $post->categories->pluck('name');
+
+            $similarPosts =
+                Post::where(function ($query) use ($categoryNames) {
+                    $query->where('public', true) // Public posts
+                        ->orWhereHas('shares', function ($query) {
+                            $query->where('user_id', Auth::user()->id);
+                        });
+                })->whereHas('categories', function ($query) use ($categoryNames) {
+                    $query->whereIn('name', $categoryNames);
+                })
+                ->where('id', '!=', $post->id)
+                ->get();
+
+            $data = [
+                'post' => new PostsResource($post),
+                'similar_posts' => PostsResource::collection($similarPosts),
+            ];
+
+
+            return $this->success($data, 'Post retrieved successfully');
         }
 
         return $this->error(null, 'You are not authorized to view this post', 403);
     }
+
 
 
     /**
@@ -96,6 +119,24 @@ class PostsController extends Controller
 
         if (!$post) {
             return $this->error(null, 'Post not found', 404);
+        }
+
+        if (Auth::user()->id == $post->user_id) {
+            $validatedData = $request->validate([
+                "title" => ["sometimes", "max:255"],
+                "desc" => ["sometimes", "max:255"],
+                "public" => ["sometimes", "boolean"],
+                'categories' => 'sometimes|array',
+                'categories.*' => 'sometimes|numeric',
+            ]);
+
+            $categories = $validatedData['categories'];
+            $post->categories()->sync($categories);
+
+            $post->last_edited_by = $loggedInUserId;
+
+            $post->update($validatedData);
+            return $this->success(new PostsResource($post), 'Post updated successfully');
         }
 
         if (!$post->shares()->where('user_id', $loggedInUserId)->exists() && $post->user_id !== $loggedInUserId) {
