@@ -17,6 +17,6 @@ class PostShared extends Mailable
     {
         return $this->view('emails.post_shared')
             ->with(['share' => $this->share])
-            ->subject('Your post has been shared');
+            ->subject('A post has been shared with you');
     }
 }

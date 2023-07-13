@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Contracts\Auth\CanResetPassword;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -55,7 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function post()
     {
-        return $this->hasMany(Post::class)->select("title", "desc", "public");
+        return $this->hasMany(Post::class)->select("id", "title", "desc", "public");
     }
 
     public function comment()
@@ -65,11 +66,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function rating()
     {
-        return $this->hasMany(Rating::class)->select("rating");
+        return $this->hasMany(Rating::class)->select("post_id", "rating");
     }
 
-    public function shares()
+    public function share()
     {
-        return $this->hasMany(Share::class);
+        return $this->hasMany(Share::class)->select("post_id");
     }
 }

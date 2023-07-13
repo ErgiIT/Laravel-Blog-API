@@ -2,58 +2,58 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Repositories\AuthRepository;
 use App\Http\Requests\LoginUserRequest;
 use App\Http\Requests\StoreUserRequest;
-use App\Models\User;
 use App\Traits\HttpResponses;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+
 
 class AuthController extends Controller
 {
     use HttpResponses;
 
+    protected $authRepository;
+
+    public function __construct(AuthRepository $authRepository)
+    {
+        $this->authRepository = $authRepository;
+    }
+
+
     public function register(StoreUserRequest $request)
     {
-        $request->validated($request->all());
+        try {
+            $validatedData = $request->validated();
 
-        $user = User::create([
-            "name" => $request->name,
-            "email" => $request->email,
-            "password" => Hash::make($request->password),
-        ]);
+            $user = $this->authRepository->register($validatedData);
 
-        $user->sendEmailVerificationNotification();
-
-        return $this->success([
-            "user" => $user,
-            "token" => $user->createToken("API Token of " . $user->name)->plainTextToken
-        ]);
+            return $this->success($user, 'User created successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), $e->getCode());
+        }
     }
 
     public function login(LoginUserRequest $request)
     {
-        $request->validated($request->all());
+        try {
+            $validatedData = $request->validated();
 
-        if (!Auth::attempt($request->only("email", "password"))) {
-            return $this->error("", "Credentials do not match", 401);
+            $user = $this->authRepository->login($validatedData);
+
+            return $this->success($user, 'User logged in successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), $e->getCode());
         }
-
-
-        $user = User::where("email", $request->email)->first();
-
-        return $this->success([
-            "user" => $user,
-            "token" => $user->createToken("Api Token of " . $user->name)->plainTextToken
-        ]);
     }
 
     public function logout()
     {
-        Auth::user()->currentAccessToken()->delete();
+        try {
+            $logout = $this->authRepository->logout();
 
-        return $this->success([
-            "message" => "You have succesfully been logged out and your token has been deleted"
-        ]);
+            return $this->success($logout, "User logged out successfully", 200);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), $e->getCode());
+        }
     }
 }
