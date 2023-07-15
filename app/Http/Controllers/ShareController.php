@@ -32,18 +32,18 @@ class ShareController extends Controller
         }
     }
 
-    public function update(UpdateShareRequest $request, $id)
-    {
-        try {
-            $validatedData = $request->validated();
+    // public function update(UpdateShareRequest $request, $id)
+    // {
+    //     try {
+    //         $validatedData = $request->validated();
 
-            $share = $this->shareRepository->update($id, $validatedData);
+    //         $share = $this->shareRepository->update($id, $validatedData);
 
-            return $this->success($share, 'Share updated successfully');
-        } catch (\Exception $e) {
-            return $this->error(null, $e->getMessage(), $e->getCode());
-        }
-    }
+    //         return $this->success($share, 'Share updated successfully');
+    //     } catch (\Exception $e) {
+    //         return $this->error(null, $e->getMessage(), $e->getCode());
+    //     }
+    // }
 
     public function destroy($id)
     {

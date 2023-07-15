@@ -24,34 +24,31 @@ class ShareRepository
         // Retrieve the user(s) to share the post with
         $shareWithUserIds = $data['user_ids'];
 
-        $alreadySharedWithUsers = []; // Array to store user IDs with existing shares
-        $successfulShares = []; // Array to store user IDs for successful shares
-        $errorMessages = []; // Array to store error messages
-
         foreach ($shareWithUserIds as $shareWithUserId) {
             // Check if the user with the given ID exists
             $userExists = User::where('id', $shareWithUserId)->exists();
 
             if (!$userExists) {
-                $errorMessages[] = 'User with ID ' . $shareWithUserId . ' does not exist.';
-                continue; // Skip to the next iteration of the loop
+                throw new \Exception('User with ID ' . $shareWithUserId . ' does not exist.', 404);
             }
 
             if ($shareWithUserId === $user->id) {
-                $errorMessages[] = 'You cannot share the post with yourself.';
-                continue; // Skip to the next iteration of the loop
+                throw new \Exception('You cannot share the post with yourself.', 404);
             }
 
-            // Check if the share record already exists for the given user and post combination
             $existingShare = Share::where('user_id', $shareWithUserId)
                 ->where('post_id', $post->id)
                 ->exists();
 
             if ($existingShare) {
-                $alreadySharedWithUsers[] = $shareWithUserId;
-                continue; // Skip to the next iteration of the loop
+                throw new \Exception("This post has already been shared with user: " . $shareWithUserId, 404);
             }
+        }
 
+        $successfulShares = [];
+
+        // Create shares and send emails (if needed) outside the loop
+        foreach ($shareWithUserIds as $shareWithUserId) {
             $share = Share::create([
                 'user_id' => $shareWithUserId,
                 'post_id' => $post->id,
@@ -66,81 +63,60 @@ class ShareRepository
             $successfulShares[] = $shareWithUserId;
         }
 
-        if (!empty($errorMessages) || !empty($alreadySharedWithUsers) || !empty($successfulShares)) {
-            $message = '';
+        // Convert the array of user IDs into a string
+        $successfulSharesString = implode(', ', $successfulShares);
 
-            // Combine the error messages into a single string
-            if (!empty($errorMessages)) {
-                $errorMessage = implode(' ', $errorMessages);
-                $message .= 'Errors occurred while sharing the post: ' . $errorMessage . ' ';
-            }
-
-            // If alreadySharedWithUsers array is not empty, display the already shared message
-            if (!empty($alreadySharedWithUsers)) {
-                $message .= 'This post has already been shared with user ID(s): ' . implode(', ', $alreadySharedWithUsers) . '. ';
-            }
-
-            // If successfulShares array is not empty, display the success message
-            if (!empty($successfulShares)) {
-                $successMessage = 'Post shared successfully with user ID(s): ' . implode(', ', $successfulShares) . '. ';
-                $message .= $successMessage;
-            }
-
-            if (!empty($errorMessages) || !empty($alreadySharedWithUsers) && !empty($successfulShares)) {
-                throw new \Exception($message, 404);
-            } else {
-                return  $message;
-            }
-        } else {
-            throw new \Exception('No shares were made', 409);
-        }
+        // Return the success message with the user IDs
+        return "Post shared successfully with users: " . $successfulSharesString;
     }
 
-    public function update($id, array $data)
-    {
-        $user = Auth::user();
-        $share = Share::find($id);
-
-        if (!$share) {
-            throw new \Exception('Share not found', 404);
-        }
-
-        $post = $share->post;
-
-        // Check if the authenticated user is the owner of the post
-        if ($user->id !== $post->user_id) {
-            throw new \Exception('You are not allowed to update this share', 403);
-        }
-
-        // Retrieve the user ID to update the share with
-        $shareWithUserId = $data['user_id'];
-
-        // Check if the user with the given ID exists
-        $userExists = User::where('id', $shareWithUserId)->exists();
-
-        if (!$userExists) {
-            throw new \Exception('User with ' . $shareWithUserId . "does not exist", 403);
-        }
-
-        if ($shareWithUserId === $user->id) {
-            throw new \Exception('You cannot share this post with yourself', 400);
-        }
 
 
-        // Check if the share record already exists for the given user and post combination
-        $existingShare = Share::where('user_id', $shareWithUserId)
-            ->where('post_id', $post->id)
-            ->exists();
+    // public function update($id, array $data)
+    // {
+    //     $user = Auth::user();
+    //     $share = Share::find($id);
 
-        if ($existingShare) {
-            throw new \Exception('This post has already been shared with user ID: ' . $shareWithUserId, 400);
-        }
+    //     if (!$share) {
+    //         throw new \Exception('Share not found', 404);
+    //     }
 
-        // Update the share record
-        $share->update(['user_id' => $shareWithUserId]);
+    //     $post = $share->post;
 
-        return $share;
-    }
+    //     // Check if the authenticated user is the owner of the post
+    //     if ($user->id !== $post->user_id) {
+    //         throw new \Exception('You are not allowed to update this share', 403);
+    //     }
+
+    //     // Retrieve the user ID to update the share with
+    //     $shareWithUserId = $data['user_id'];
+
+    //     // Check if the user with the given ID exists
+    //     $userExists = User::where('id', $shareWithUserId)->exists();
+
+    //     if (!$userExists) {
+    //         throw new \Exception('User with ' . $shareWithUserId . "does not exist", 403);
+    //     }
+
+    //     if ($shareWithUserId === $user->id) {
+    //         throw new \Exception('You cannot share this post with yourself', 400);
+    //     }
+
+
+    //     // Check if the share record already exists for the given user and post combination
+    //     $existingShare = Share::where('user_id', $shareWithUserId)
+    //         ->where('post_id', $post->id)
+    //         ->exists();
+
+    //     if ($existingShare) {
+    //         throw new \Exception('This post has already been shared with user ID: ' . $shareWithUserId, 400);
+    //     }
+
+    //     // Update the share record
+    //     $share->update(['user_id' => $shareWithUserId]);
+
+    //     return $share;
+    // }
 
     public function destroy($shareId)
     {
