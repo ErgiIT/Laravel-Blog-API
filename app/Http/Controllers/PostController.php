@@ -19,10 +19,10 @@ class PostController extends Controller
         $this->postRepository = $postRepository;
     }
 
-    public function index($userId = null)
+    public function index($own = null)
     {
         try {
-            $posts = $this->postRepository->index($userId);
+            $posts = $this->postRepository->index($own);
 
             return $this->success($posts);
         } catch (\Exception $e) {

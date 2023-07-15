@@ -10,24 +10,23 @@ use Illuminate\Support\Facades\Auth;
 class PostRepository
 {
 
-    public function index($userId)
+    public function index($own = null)
     {
-        if ($userId) {
+        $loggedInUserId = Auth::user()->id;
+        if ($own == "own") {
             return PostsResource::collection(
-                Post::where("user_id", $userId)->get()
+                Post::where("user_id", $loggedInUserId)->get()
             );
         }
 
-        $userId = Auth::user() ? Auth::user()->id : null;
+        $posts =  Post::where(function ($query) use ($loggedInUserId) {
+            $query->where("public", true)
+                ->orWhere("user_id", $loggedInUserId);
+        })->orWhereHas('shares', function ($query) use ($loggedInUserId) {
+            $query->where('user_id', $loggedInUserId);
+        })->get();
 
-        return PostsResource::collection(
-            Post::where(function ($query) use ($userId) {
-                $query->where("public", 1)
-                    ->orWhere("user_id", $userId);
-            })->orWhereHas('shares', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })->get()
-        );
+        return PostsResource::collection($posts);
     }
 
     public function show($id)
@@ -37,6 +36,7 @@ class PostRepository
         $post = Post::where('id', $id)
             ->where(function ($query) use ($loggedInUserId) {
                 $query->where('user_id', $loggedInUserId)
+                    ->orWhere("public", true)
                     ->orWhereHas('shares', function ($query) use ($loggedInUserId) {
                         $query->where('user_id', $loggedInUserId);
                     });
@@ -47,7 +47,7 @@ class PostRepository
             $categoryNames = $post->categories->pluck('name');
 
             $similarPosts = Post::where(function ($query) use ($categoryNames) {
-                $query->where('public', true) // Public posts
+                $query->where('public', true)
                     ->orWhereHas('shares', function ($query) {
                         $query->where('user_id', Auth::user()->id);
                     });
