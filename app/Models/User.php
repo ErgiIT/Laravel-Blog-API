@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'refresh_token',
     ];
 
     /**
@@ -72,5 +73,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function share()
     {
         return $this->hasMany(Share::class)->select("post_id");
+    }
+
+    public function getRefreshTokenAttribute($value)
+    {
+        return $value;
     }
 }

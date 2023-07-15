@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Repositories\AuthRepository;
 use App\Http\Requests\LoginUserRequest;
+use App\Http\Requests\RefreshTokenRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Traits\HttpResponses;
 
@@ -41,6 +42,19 @@ class AuthController extends Controller
             $user = $this->authRepository->login($validatedData);
 
             return $this->success($user, 'User logged in successfully', 201);
+        } catch (\Exception $e) {
+            return $this->error(null, $e->getMessage(), $e->getCode());
+        }
+    }
+
+    public function refreshToken(RefreshTokenRequest $request)
+    {
+        try {
+            $validatedData = $request->validated();
+
+            $user = $this->authRepository->refreshToken($validatedData);
+
+            return $this->success($user, 'User access token refreshed successfully', 201);
         } catch (\Exception $e) {
             return $this->error(null, $e->getMessage(), $e->getCode());
         }

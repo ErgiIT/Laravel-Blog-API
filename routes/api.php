@@ -2,12 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ShareController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,13 +27,15 @@ use Illuminate\Support\Facades\Route;
 Route::get("/guest", [PostController::class, "index"])->middleware([]);
 Route::post("/login", [AuthController::class, "login"]);
 Route::post("/register", [AuthController::class, "register"]);
+Route::post('/refresh', [AuthController::class, 'refreshToken']);
+
 
 
 //Private Routes
 
 Route::group(["middleware" => ["auth:sanctum"]], function () {
     Route::group(["middleware" => ["verified"]], function () {
-        Route::get("/posts/{id?}", [PostController::class, "index"]);
+        Route::get("/posts/{own?}", [PostController::class, "index"]);
         Route::get("/post/{post}", [PostController::class, "show"]);
         Route::post("/posts", [PostController::class, 'store']);
         Route::patch("/posts/{id}", [PostController::class, 'update']);
