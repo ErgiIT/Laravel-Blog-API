@@ -3,12 +3,20 @@
 namespace App\Http\Repositories;
 
 use App\Http\Resources\PostsResource;
+use App\Http\Services\PostService;
 use App\Models\Post;
 use App\Models\Share;
 use Illuminate\Support\Facades\Auth;
 
 class PostRepository
 {
+    private $postService;
+
+    public function __construct(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
+
 
     public function index($own = null)
     {
@@ -75,11 +83,13 @@ class PostRepository
                 'post' => new PostsResource($post),
                 'similar_posts' => $rankedPosts,
             ];
+        $data = $this->postService->getSimilarAndRankedPosts($id);
 
+        if ($data) {
             return $data;
+        } else {
+            throw new \Exception('Post not found', 404);
         }
-
-        throw new \Exception('Post not found', 404);
     }
 
     public function store(array $data)
