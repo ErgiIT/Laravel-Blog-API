@@ -3,12 +3,20 @@
 namespace App\Http\Repositories;
 
 use App\Http\Resources\PostsResource;
+use App\Http\Services\PostService;
 use App\Models\Post;
 use App\Models\Share;
 use Illuminate\Support\Facades\Auth;
 
 class PostRepository
 {
+    private $postService;
+
+    public function __construct(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
+
 
     public function index($userId)
     {
@@ -32,54 +40,13 @@ class PostRepository
 
     public function show($id)
     {
-        $loggedInUserId = Auth::user()->id;
+        $data = $this->postService->getSimilarAndRankedPosts($id);
 
-        $post = Post::where('id', $id)
-            ->where(function ($query) use ($loggedInUserId) {
-                $query->where('user_id', $loggedInUserId)
-                    ->orWhereHas('shares', function ($query) use ($loggedInUserId) {
-                        $query->where('user_id', $loggedInUserId);
-                    });
-            })
-            ->first();
-
-        if ($post) {
-            $categoryNames = $post->categories->pluck('name');
-
-            $similarPosts = Post::where(function ($query) use ($categoryNames) {
-                $query->where('public', true) // Public posts
-                    ->orWhereHas('shares', function ($query) {
-                        $query->where('user_id', Auth::user()->id);
-                    });
-            })
-                ->whereHas('categories', function ($query) use ($categoryNames) {
-                    $query->whereIn('name', $categoryNames);
-                })
-                ->where('id', '!=', $post->id)
-                ->get();
-
-
-
-            $rankedPosts = $similarPosts->map(function ($similarPost) use ($categoryNames) {
-                $similarPostCategories = $similarPost->categories->pluck('name');
-                $commonCategories = $categoryNames->intersect($similarPostCategories);
-                $count = $commonCategories->count();
-
-                return [
-                    'post' => new PostsResource($similarPost),
-                    'category_count' => $count,
-                ];
-            })->sortByDesc('category_count')->values();
-
-            $data = [
-                'post' => new PostsResource($post),
-                'similar_posts' => $rankedPosts,
-            ];
-
+        if ($data) {
             return $data;
+        } else {
+            throw new \Exception('Post not found', 404);
         }
-
-        throw new \Exception('Post not found', 404);
     }
 
     public function store(array $data)
